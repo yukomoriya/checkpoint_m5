@@ -30,46 +30,26 @@ def save_phonelist(C):
     except:
         print("No changes!")
     cur.close()
+def read_name(C, phone):
+    cur = C.cursor()
+    cur.execute(f"SELECT name FROM phonelist WHERE phone = '{phone}';")
+    rows = cur.fetchall()
+    cur.close()
+    return rows
 
 app = Flask(__name__)
 
-@app.route("/")
-def start():
-    conn = sqlite3.connect("phone.db")
-    now = datetime.datetime.now()
-    D = [str(now.year%100), str(now.month), str(now.day)]
-    if len(D[1])<2:
-        D[1] = '0'+D[1]
-    if len(D[2])<2:
-        D[2] = '0'+D[2]
-    smart = read_phonelist(conn)
-    save_phonelist(conn)
-    return render_template('list.html', list=smart, date=D)
-
 @app.route("/name")
 def name_func():
-    return render_template('name.html')
+    conn = sqlite3.connect("phone.db")
+    rows =read_name(conn)
+    return render_template('name.html', list = rows)
 
 @app.route("/phone")
 def phone_func():
     return render_template('phone.html')
 
-@app.route("/delete")
-def delete_func():
-    conn = sqlite3.connect("phone.db")
-    name=request.args['name']
-    delete_phone(conn, name)
-    save_phonelist(conn)
-    return render_template('delete.html', name=name)
 
-@app.route("/insert")
-def insert_func():
-    conn = sqlite3.connect("phone.db")
-    name=request.args['name']
-    phone=request.args['phone']
-    add_phone(conn, name, phone)
-    save_phonelist(conn)
-    return render_template('insert.html', name=name, phone=phone)
 
 @app.route("/api")
 def api_func():
@@ -86,6 +66,15 @@ def api_func():
         if len(phone) < 1:
             return "not found"
         return phone[0][0]
+    elif action == 'name':
+        phone = args.get('phone', default="No phone", type=str)
+        if phone == "No phone":
+            return render_template('api_usage.html', action=action)
+        name = read_name(conn, phone)
+        if len(name) < 1:
+            return "not found"
+
+        return name[0][0]
     else:
         return f"Unknown action: '{action}'"
 
