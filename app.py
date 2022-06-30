@@ -46,6 +46,14 @@ def start():
     save_phonelist(conn)
     return render_template('list.html', list=smart, date=D)
 
+@app.route("/name")
+def name_func():
+    return render_template('name.html')
+
+@app.route("/phone")
+def phone_func():
+    return render_template('phone.html')
+
 @app.route("/delete")
 def delete_func():
     conn = sqlite3.connect("phone.db")
